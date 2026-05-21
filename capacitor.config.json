@@ -1,0 +1,8 @@
+{
+  "appId": "com.wattnext.app",
+  "appName": "WATTNEXT",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
