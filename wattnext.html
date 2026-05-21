@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3A1A6E">
+<title>WATTNEXT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── HIDE SCROLLBARS EVERYWHERE (Chrome, Safari, Edge, Firefox) ── */
+*                          { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar       { display: none; width: 0; height: 0; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --orange: #FF9900;
+  --orange-light: #FFB74D;
+  --orange-dark: #CC7A00;
+  --orange-bg: #FFF3E0;
+  --purple: #5B2D9E;
+  --purple-light: #7C4EC4;
+  --purple-dark: #3A1A6E;
+  --purple-bg: #EDE7F6;
+  --white: #FFFFFF;
+  --surface: #F8F4FF;
+  --gray-100: #F2F0F8;
+  --gray-200: #E4E0F0;
+  --gray-400: #B0A8C8;
+  --gray-600: #6B6080;
+  --gray-900: #1A1228;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-xs: 10px;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 24px);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--purple-dark);
+  font-family: 'Nunito', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { position: fixed; inset: 0; overflow: hidden; background: var(--surface); }
+
+/* ── SCREENS ── */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  transform: translateX(30px);
+  overflow: hidden;
+}
+.screen.active  { opacity: 1; pointer-events: all; transform: translateX(0); }
+.screen.exit    { opacity: 0; transform: translateX(-30px); pointer-events: none; }
+
+/* ── SCROLL BODY ── */
+.scroll-body {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(32px + var(--safe-bottom));
+}
+
+/* ── SPLASH ── */
+#screen-splash {
+  background: linear-gradient(170deg, #3A1A6E 0%, #5B2D9E 55%, #8B4FCC 100%);
+  align-items: center; justify-content: center; padding: 0 32px;
+}
+.splash-bg-bolt {
+  position: absolute; font-size: 420px; color: rgba(255,255,255,0.03);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none; user-select: none;
+}
+.splash-logo {
+  width: 108px; height: 108px; background: var(--orange);
+  border-radius: 30px; display: flex; align-items: center; justify-content: center;
+  font-size: 56px; color: var(--purple-dark); margin-bottom: 28px;
+  box-shadow: 0 0 0 10px rgba(255,153,0,0.18), 0 0 0 22px rgba(255,153,0,0.09), 0 20px 60px rgba(255,153,0,0.35);
+  animation: logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%,100% { box-shadow: 0 0 0 10px rgba(255,153,0,0.18),0 0 0 22px rgba(255,153,0,0.09),0 20px 60px rgba(255,153,0,0.35); }
+  50%      { box-shadow: 0 0 0 14px rgba(255,153,0,0.22),0 0 0 30px rgba(255,153,0,0.11),0 24px 70px rgba(255,153,0,0.4); }
+}
+.splash-title   { font-family:'Montserrat',sans-serif; font-size:38px; font-weight:900; color:white; letter-spacing:5px; margin-bottom:6px; }
+.splash-tagline { font-size:14px; color:rgba(255,255,255,0.5); margin-bottom:2px; letter-spacing:1px; }
+.splash-version { font-size:12px; color:rgba(255,255,255,0.3); margin-bottom:60px; }
+.splash-btn {
+  background: var(--orange); color: var(--purple-dark); border: none;
+  padding: 18px 0; border-radius: 50px; font-size: 16px; font-weight: 900;
+  letter-spacing: 2px; cursor: pointer; width: 100%; max-width: 280px;
+  font-family: 'Montserrat',sans-serif; text-transform: uppercase;
+  box-shadow: 0 8px 32px rgba(255,153,0,0.45); transition: transform 0.15s, box-shadow 0.15s;
+  position: relative; overflow: hidden;
+}
+.splash-btn:active { transform: scale(0.96); }
+
+/* ── TOP BAR ── */
+.top-bar {
+  background: var(--purple-dark);
+  padding: calc(var(--safe-top) + 10px) 20px 14px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0; position: relative; z-index: 10;
+}
+.back-btn {
+  width:38px; height:38px; background:rgba(255,255,255,0.12); border:none;
+  border-radius:12px; color:white; font-size:22px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition: background 0.15s, transform 0.1s; font-family:'Nunito',sans-serif;
+}
+.back-btn:active { background:rgba(255,255,255,0.25); transform:scale(0.92); }
+.top-bar-title { color:white; font-size:17px; font-weight:800; letter-spacing:0.3px; flex:1; }
+.top-bar-badge {
+  background:var(--orange); color:var(--purple-dark);
+  font-size:10px; font-weight:900; padding:4px 11px; border-radius:20px;
+  letter-spacing:1px; font-family:'Montserrat',sans-serif; flex-shrink:0;
+}
+
+/* ── MAIN MENU ── */
+#screen-main { background: var(--surface); }
+.main-header {
+  background: linear-gradient(160deg, var(--purple-dark) 0%, var(--purple) 100%);
+  padding: calc(var(--safe-top) + 20px) 24px 32px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.main-header::before {
+  content:'⚡'; position:absolute; font-size:200px; color:rgba(255,255,255,0.04);
+  right:-30px; bottom:-30px; line-height:1;
+}
+.main-logo-sm {
+  width:52px; height:52px; background:var(--orange); border-radius:15px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 14px; font-size:26px; box-shadow:0 6px 20px rgba(255,153,0,0.4);
+}
+.main-title { font-family:'Montserrat',sans-serif; color:white; font-size:22px; font-weight:900; letter-spacing:3px; margin-bottom:4px; }
+.main-sub   { color:rgba(255,255,255,0.55); font-size:13px; }
+
+.menu-section-label {
+  font-size:11px; font-weight:900; color:var(--gray-400);
+  letter-spacing:1.5px; text-transform:uppercase;
+  padding:20px 20px 10px; font-family:'Montserrat',sans-serif;
+}
+.mode-card {
+  display:flex; align-items:center; gap:16px;
+  background:white; margin:0 16px 12px; border-radius:var(--radius);
+  padding:18px; cursor:pointer; border:1.5px solid rgba(91,45,158,0.08);
+  box-shadow:0 2px 16px rgba(91,45,158,0.07);
+  transition:transform 0.15s, box-shadow 0.15s;
+  -webkit-user-select:none; user-select:none;
+}
+.mode-card:active { transform:scale(0.97); }
+.mode-icon-box {
+  width:54px; height:54px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; flex-shrink:0;
+}
+.mode-icon-box.orange { background:linear-gradient(135deg,#FF9900,#FFB74D); box-shadow:0 6px 16px rgba(255,153,0,0.3); }
+.mode-icon-box.purple { background:linear-gradient(135deg,#5B2D9E,#7C4EC4); box-shadow:0 6px 16px rgba(91,45,158,0.3); }
+.mode-text h3 { font-size:16px; font-weight:800; color:var(--gray-900); margin-bottom:3px; }
+.mode-text p  { font-size:12px; color:var(--gray-600); line-height:1.4; }
+.mode-chevron { font-size:20px; color:var(--gray-400); margin-left:auto; }
+
+.quick-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 16px 24px;
+}
+.quick-chip {
+  background:white; border:1.5px solid rgba(91,45,158,0.1); border-radius:var(--radius-sm);
+  padding:14px 12px; text-align:center; cursor:pointer;
+  transition:all 0.15s; box-shadow:0 2px 10px rgba(91,45,158,0.05);
+}
+.quick-chip:active { background:var(--purple-bg); border-color:var(--purple); transform:scale(0.96); }
+.quick-chip-icon  { font-size:24px; margin-bottom:6px; display:block; }
+.quick-chip-label { font-size:12px; font-weight:800; color:var(--gray-900); }
+
+/* ── CONTENT ── */
+.pad { padding:20px 16px 0; }
+.sec-label {
+  font-size:11px; font-weight:900; color:var(--purple);
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px;
+  font-family:'Montserrat',sans-serif;
+}
+.card {
+  background:white; border-radius:var(--radius); padding:18px; margin-bottom:12px;
+  box-shadow:0 2px 14px rgba(91,45,158,0.07); border:1.5px solid rgba(91,45,158,0.07);
+}
+.card-title { font-size:15px; font-weight:800; color:var(--purple-dark); margin-bottom:6px; }
+.card-body  { font-size:13px; color:var(--gray-600); line-height:1.65; }
+
+/* ── SUBJECT GRID ── */
+.subject-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.subject-btn {
+  background:white; border:1.5px solid rgba(91,45,158,0.09);
+  border-radius:var(--radius-sm); padding:16px 8px; text-align:center;
+  cursor:pointer; transition:all 0.15s; box-shadow:0 2px 10px rgba(91,45,158,0.05);
+}
+.subject-btn:active, .subject-btn.selected {
+  background:var(--purple-bg); border-color:var(--purple); transform:scale(0.96);
+}
+.subject-btn-icon  { font-size:28px; display:block; margin-bottom:6px; }
+.subject-btn-label { font-size:11px; font-weight:800; color:var(--gray-900); }
+
+/* ── TOPIC PILLS ── */
+.topic-pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+.t-pill {
+  background:white; border:1.5px solid rgba(91,45,158,0.15);
+  border-radius:50px; padding:9px 18px; font-size:13px; font-weight:700;
+  color:var(--purple-dark); cursor:pointer; transition:all 0.15s;
+  box-shadow:0 2px 8px rgba(91,45,158,0.05);
+}
+.t-pill:active, .t-pill.selected {
+  background:var(--orange); border-color:var(--orange); color:var(--purple-dark);
+  box-shadow:0 4px 14px rgba(255,153,0,0.3);
+}
+
+/* ── FEATURE LIST ── */
+.feat-item {
+  display:flex; align-items:center; gap:14px; background:white;
+  border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:10px;
+  cursor:pointer; border:1.5px solid rgba(91,45,158,0.07);
+  box-shadow:0 2px 10px rgba(91,45,158,0.05); transition:all 0.15s;
+}
+.feat-item:active { transform:scale(0.97); background:var(--orange-bg); }
+.feat-num {
+  width:36px; height:36px; border-radius:11px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-light));
+  color:var(--purple-dark); font-size:16px; font-weight:900;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  box-shadow:0 4px 10px rgba(255,153,0,0.3);
+}
+.feat-name  { font-size:15px; font-weight:800; color:var(--gray-900); flex:1; }
+.feat-arrow { font-size:20px; color:var(--gray-400); }
+
+/* ── BUTTONS ── */
+.btn-primary {
+  display:block; width:100%;
+  background:linear-gradient(135deg,var(--orange),var(--orange-light));
+  color:var(--purple-dark); border:none; padding:17px; border-radius:50px;
+  font-size:15px; font-weight:900; cursor:pointer;
+  font-family:'Montserrat',sans-serif; letter-spacing:0.5px;
+  box-shadow:0 6px 24px rgba(255,153,0,0.35);
+  transition:transform 0.15s, box-shadow 0.15s; margin-bottom:10px;
+}
+.btn-primary:active { transform:scale(0.97); }
+.btn-ghost {
+  display:block; width:100%; background:transparent;
+  color:var(--purple); border:2px solid var(--purple);
+  padding:14px; border-radius:50px; font-size:14px; font-weight:800;
+  cursor:pointer; font-family:'Nunito',sans-serif; transition:all 0.15s; margin-bottom:10px;
+}
+.btn-ghost:active { background:var(--purple-bg); }
+.btn-purple {
+  display:block; width:100%; background:var(--purple); color:white; border:none;
+  padding:15px; border-radius:50px; font-size:14px; font-weight:800;
+  cursor:pointer; font-family:'Nunito',sans-serif; transition:transform 0.15s; margin-bottom:10px;
+}
+.btn-purple:active { transform:scale(0.97); }
+
+/* ── DIFFICULTY CARDS ── */
+.diff-card {
+  background:white; border-radius:var(--radius-sm); padding:18px 20px; margin-bottom:10px;
+  cursor:pointer; display:flex; align-items:center; gap:16px; border:2px solid;
+  transition:all 0.15s; box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+.diff-card:active { transform:scale(0.97); }
+.diff-card.easy { border-color:#4CAF50; }
+.diff-card.avg  { border-color:var(--orange); }
+.diff-card.hard { border-color:#F44336; }
+.diff-indicator { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+.diff-card.easy .diff-indicator { background:#4CAF50; box-shadow:0 0 0 4px rgba(76,175,80,0.2); }
+.diff-card.avg  .diff-indicator { background:var(--orange); box-shadow:0 0 0 4px rgba(255,153,0,0.2); }
+.diff-card.hard .diff-indicator { background:#F44336; box-shadow:0 0 0 4px rgba(244,67,54,0.2); }
+.diff-text  { flex:1; }
+.diff-title { font-size:15px; font-weight:800; color:var(--gray-900); }
+.diff-sub   { font-size:12px; color:var(--gray-600); margin-top:2px; }
+.diff-arrow { font-size:20px; color:var(--gray-400); }
+
+/* ── QUESTION BOX ── */
+.q-box {
+  background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+  border-radius:var(--radius); padding:22px; margin-bottom:14px;
+  position:relative; overflow:hidden;
+}
+.q-box::before {
+  content:'?'; position:absolute; font-size:160px; font-weight:900;
+  color:rgba(255,255,255,0.04); right:-10px; bottom:-20px;
+  font-family:'Montserrat',sans-serif; line-height:1;
+}
+.q-label    { font-size:10px; font-weight:900; color:var(--orange); letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; font-family:'Montserrat',sans-serif; }
+.q-text     { font-size:17px; font-weight:700; color:white; line-height:1.55; position:relative; z-index:1; }
+.q-timer-bar{ height:5px; background:rgba(255,255,255,0.15); border-radius:10px; margin-top:18px; overflow:hidden; }
+.q-timer-fill{ height:100%; background:var(--orange); border-radius:10px; transition:width 1s linear; }
+.q-time-txt { font-size:11px; color:rgba(255,255,255,0.45); margin-top:5px; text-align:right; }
+
+.ans-box {
+  background:white; border-radius:var(--radius); padding:18px; margin-bottom:14px;
+  border-left:5px solid #4CAF50; box-shadow:0 4px 20px rgba(76,175,80,0.1);
+}
+.ans-label { font-size:11px; font-weight:900; color:#4CAF50; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; font-family:'Montserrat',sans-serif; }
+.ans-text  { font-size:14px; color:var(--gray-600); line-height:1.65; }
+
+/* ── SUCCESS ── */
+.success-banner {
+  background:linear-gradient(135deg,var(--purple-dark),var(--purple-light));
+  border-radius:var(--radius); padding:28px 20px; text-align:center; margin-bottom:14px;
+  position:relative; overflow:hidden;
+}
+.success-banner::after {
+  content:'⚡'; position:absolute; font-size:180px; color:rgba(255,255,255,0.04);
+  right:-20px; bottom:-30px; line-height:1;
+}
+.success-icon  { font-size:48px; margin-bottom:10px; }
+.success-title { font-family:'Montserrat',sans-serif; color:white; font-size:22px; font-weight:900; margin-bottom:4px; }
+.success-sub   { color:rgba(255,255,255,0.6); font-size:13px; }
+
+/* ── ACTIVITY / STUDY CARDS ── */
+.activity-card {
+  background:white; border-left:4px solid var(--orange);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  padding:14px 16px; margin-bottom:10px; box-shadow:0 2px 10px rgba(91,45,158,0.06);
+}
+.activity-title { font-size:14px; font-weight:800; color:var(--purple-dark); }
+.activity-desc  { font-size:12px; color:var(--gray-600); margin-top:3px; }
+
+/* ── DECISION GRID ── */
+.decision-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.decision-btn {
+  background:white; border:2px solid rgba(91,45,158,0.1);
+  border-radius:var(--radius-sm); padding:18px 12px; text-align:center;
+  cursor:pointer; transition:all 0.15s; box-shadow:0 2px 10px rgba(91,45,158,0.05);
+}
+.decision-btn:active,.decision-btn.selected {
+  background:var(--purple-bg); border-color:var(--purple); transform:scale(0.96);
+}
+.decision-icon  { font-size:30px; display:block; margin-bottom:8px; }
+.decision-label { font-size:13px; font-weight:800; color:var(--gray-900); display:block; }
+.decision-sub   { font-size:11px; color:var(--gray-400); display:block; margin-top:2px; }
+
+/* ── TASK ROWS ── */
+.task-row {
+  background:white; border-radius:var(--radius-sm); padding:15px 16px; margin-bottom:10px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:0 2px 10px rgba(91,45,158,0.06); border:1.5px solid rgba(91,45,158,0.07);
+}
+.task-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+.dot-high { background:#F44336; box-shadow:0 0 0 3px rgba(244,67,54,0.2); }
+.dot-med  { background:var(--orange); box-shadow:0 0 0 3px rgba(255,153,0,0.2); }
+.dot-low  { background:#4CAF50; box-shadow:0 0 0 3px rgba(76,175,80,0.2); }
+.task-name { font-size:14px; font-weight:700; color:var(--gray-900); flex:1; }
+.task-meta { font-size:12px; color:var(--gray-400); }
+
+.move-btns { display:flex; gap:6px; }
+.move-btn {
+  background:var(--gray-100); border:none; border-radius:8px;
+  width:32px; height:32px; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--purple); font-family:'Nunito',sans-serif; transition:background 0.15s, transform 0.1s;
+}
+.move-btn:active { background:var(--purple-bg); transform:scale(0.9); }
+
+/* ── INPUTS ── */
+.input-field {
+  width:100%; background:white; border:2px solid rgba(91,45,158,0.12);
+  border-radius:var(--radius-sm); padding:14px 16px;
+  font-family:'Nunito',sans-serif; font-size:15px; color:var(--gray-900);
+  outline:none; margin-bottom:10px; -webkit-appearance:none;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+.input-field:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(91,45,158,0.1); }
+.input-field::placeholder { color:var(--gray-400); }
+
+.textarea-field {
+  width:100%; background:white; border:2px solid rgba(91,45,158,0.12);
+  border-radius:var(--radius-sm); padding:14px 16px;
+  font-family:'Nunito',sans-serif; font-size:14px; color:var(--gray-900);
+  outline:none; resize:none; -webkit-appearance:none;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+.textarea-field:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(91,45,158,0.1); }
+.textarea-field::placeholder { color:var(--gray-400); }
+
+/* ── CHART ── */
+.chart-row   { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.chart-label { font-size:12px; color:var(--gray-400); width:32px; text-align:right; font-weight:700; }
+.chart-track { flex:1; height:16px; background:var(--gray-100); border-radius:50px; overflow:hidden; }
+.chart-fill  { height:100%; background:linear-gradient(90deg,var(--purple),var(--orange)); border-radius:50px; }
+.chart-val   { font-size:12px; font-weight:800; color:var(--purple-dark); width:32px; }
+
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════ SPLASH ═══════ -->
+<div class="screen active" id="screen-splash">
+  <div class="splash-bg-bolt">⚡</div>
+  <div class="splash-logo">⚡</div>
+  <div class="splash-title">WATTNEXT</div>
+  <div class="splash-tagline">Your Academic & Well-Being Companion</div>
+  <div class="splash-version">v 1.0.0</div>
+  <button class="splash-btn" onclick="go('main')">GET STARTED</button>
+</div>
+
+<!-- ═══════ MAIN MENU ═══════ -->
+<div class="screen" id="screen-main">
+  <div class="main-header">
+    <div class="main-logo-sm">⚡</div>
+    <div class="main-title">WATTNEXT</div>
+    <div class="main-sub">What do you need today?</div>
+  </div>
+  <div class="scroll-body">
+    <div class="menu-section-label">Modes</div>
+    <div class="mode-card" onclick="go('academic-subject')">
+      <div class="mode-icon-box orange">🎓</div>
+      <div class="mode-text">
+        <h3>Academic Buddy</h3>
+        <p>Study tools, ELI5 explanations, brain warm-ups & more</p>
+      </div>
+      <div class="mode-chevron">›</div>
+    </div>
+    <div class="mode-card" onclick="go('wellbeing-mode')">
+      <div class="mode-icon-box purple">🌱</div>
+      <div class="mode-text">
+        <h3>Well-Being</h3>
+        <p>Time tracker, task urgency & weekly self-review</p>
+      </div>
+      <div class="mode-chevron">›</div>
+    </div>
+    <div class="menu-section-label">Quick Access</div>
+    <div class="quick-grid">
+      <div class="quick-chip" onclick="go('explain')">
+        <span class="quick-chip-icon">⚡</span>
+        <div class="quick-chip-label">Simplify</div>
+      </div>
+      <div class="quick-chip" onclick="go('brain-warmup')">
+        <span class="quick-chip-icon">🧠</span>
+        <div class="quick-chip-label">Brain Warm-Up</div>
+      </div>
+      <div class="quick-chip" onclick="go('study-suggestion')">
+        <span class="quick-chip-icon">📖</span>
+        <div class="quick-chip-label">Study Plan</div>
+      </div>
+      <div class="quick-chip" onclick="go('time-tracker')">
+        <span class="quick-chip-icon">⏰</span>
+        <div class="quick-chip-label">Time Tracker</div>
+      </div>
+      <div class="quick-chip" onclick="go('weekly-review')">
+        <span class="quick-chip-icon">📊</span>
+        <div class="quick-chip-label">Weekly Review</div>
+      </div>
+      <div class="quick-chip" onclick="go('wellbeing-mode')">
+        <span class="quick-chip-icon">💆</span>
+        <div class="quick-chip-label">Well-Being</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ACADEMIC: SELECT SUBJECT ═══════ -->
+<div class="screen" id="screen-academic-subject">
+  <div class="top-bar">
+    <button class="back-btn" onclick="go('main')">‹</button>
+    <span class="top-bar-title">Academic Buddy</span>
+    <span class="top-bar-badge">STEP 1/3</span>
+  </div>
+  <div class="scroll-body pad">
+    <div class="sec-label">Choose a Subject</div>
+    <div class="subject-grid">
+      <div class="subject-btn" onclick="selectSubject('BEM')">
+        <span class="subject-btn-icon">📐</span>
+        <div class="subject-btn-label">BEM</div>
+      </div>
+      <div class="subject-btn" onclick="selectSubject('Physics')">
+        <span class="subject-btn-icon">⚛️</span>
+        <div class="subject-btn-label">Physics</div>
+      </div>
+      <div class="subject-btn" onclick="selectSubject('Chemistry')">
+        <span class="subject-btn-icon">🧪</span>
+        <div class="subject-btn-label">Chemistry</div>
+      </div>
+      <div class="subject-btn" onclick="selectSubject('Comp Prog')">
+        <span class="subject-btn-icon">💻</span>
+        <div class="subject-btn-label">Comp Prog</div>
+      </div>
+      <div class="subject-btn" onclick="selectSubject('PH History')">
+        <span class="subject-btn-icon">🇵🇭</span>
+        <div class="subject-btn-label">PH History</div>
+      </div>
+      <div class="subject-btn" onclick="selectSubject('Vocabulary')">
+        <span class="subject-btn-icon">📚</span>
+        <div class="subject-btn-label">Vocabulary</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ACADEMIC: SELECT TOPIC ═══════ -->
+<div class="screen" id="screen-academic-topic">
+  <div class="top-bar">
+    <button class="back-btn" onclick="go('academic-subject')">‹</button>
+    <span class="top-bar-title" id="topic-bar-title">Topics</span>
+    <span class="top-bar-badge">STEP 2/3</span>
+  </div>
+  <div class="scroll-body pad">
+    <div class="sec-label">Select a Topic</div>
+    <div class="topic-pills" id="topic-pills"></div>
+    <button class="btn-primary hidden" id="topic-next-btn" onclick="go('academic-mode')">Continue →</button>
+  </div>
+</div>
+
+<!-- ═══════ ACADEMIC: SELECT MODE ═══════ -->
+<div class="screen" id="screen-academic-mode">
+  <div class="top-bar">
+    <button class="back-btn" onclick="go('academic-topic')">‹</button>
+    <span class="top-bar-title">Choose Mode</span>
+    <span class="top-bar-badge">STEP 3/3</span>
+  </div>
+  <div class="scroll-body pad">
+    <div class="sec-label">What do you want to do?</div>
+    <div class="feat-item" onclick="go('explain')">
+      <div class="feat-num">1</div>
+      <div class="feat-name">Explain Like I'm 5</div>
+      <div class="feat-arrow">›</div>
+    </div>
+    <div class="feat-item" onclick="go('brain-warmup')">
+      <div class="feat-num">2</div>
+      <div class="feat-name">Daily Brain Warm-Up</div>
+      <div class="feat-arrow">›</div>
+    </div>
+    <div class="feat-item" onclick="go('study-suggestion')">
+      <div class="feat-num">3</div>
+      <div class="feat-name">Study Suggestion</div>
+      <div class="feat-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ EXPLAIN LIKE I'M 5 ═══════ -->
+<div class="screen" id="screen-explain">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goBack('explain')">‹</button>
+    <span class="top-bar-title">Explain Like I'm 5</span>
+    <span class="top-bar-badge">ELI5</span>
+  </div>
+  <div class="scroll-body pad">
+    <div class="card">
+      <div class="card-title">📚 Concept Library</div>
+      <div class="card-body">Looking up: <strong id="explain-topic" style="color:var(--purple)">your topic</strong></div>
+    </div>
+    <div class="sec-label">Simplified Explanation</div>
+    <div id="explain-result" class="card">
+      <div style="text-align:center;padding:24px 0;">
+        <div style="font-size:44px;margin-bottom:10px;">⚡</div>
+        <div style="font-size:14px;color:var(--gray-400);">Loading...</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="go('main')">🏠 Main Menu</button>
+    <button class="btn-ghost" onclick="goBack('explain')">Try Another Topic</button>
+  </div>
+</div>
+
+<!-- ═══════ BRAIN WARM-UP ═══════ -->
+<div class="screen" id="screen-brain-warmup">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goBack('brain-warmup')">‹</button>
+    <span class="top-bar-title">Daily Brain Warm-Up</span>
+    <span class="top-bar-badge">QUIZ</span>
+  </div>
+
+  <!-- Step 1: Difficulty -->
+  <div class="scroll-body pad" id="warmup-select-area">
+    <div class="sec-label">Select Difficulty</div>
+    <div class="diff-card easy" onclick="startWarmup('easy')">
+      <div class="diff-indicator"></div>
+      <div class="diff-text">
+        <div class="diff-title">Easy</div>
+        <div class="diff-sub">30 seconds per question</div>
+      </div>
+      <div class="diff-arrow">›</div>
+    </div>
+    <div class="diff-card avg" onclick="startWarmup('average')">
+      <div class="diff-indicator"></div>
+      <div class="diff-text">
+        <div class="diff-title">Average</div>
+        <div class="diff-sub">45 seconds per question</div>
+      </div>
+      <div class="diff-arrow">›</div>
+    </div>
+    <div class="diff-card hard" onclick="startWarmup('hard')">
+      <div class="diff-indicator"></div>
+      <div class="diff-text">
+        <div class="diff-title">Difficult</div>
+        <div class="diff-sub">90 seconds per question</div>
+      </div>
+      <div class="diff-arrow">›</div>
+    </div>
+  </div>
+
+  <!-- Step 2: Question -->
+  <div class="scroll-body pad hidden" id="warmup-question-area">
+    <div class="q-box">
+      <div class="q-label" id="wq-label">QUESTION 1/3</div>
+      <div class="q-text"  id="wq-text">Loading...</div>
+      <div class="q-timer-bar"><div class="q-timer-fill" id="wq-timer" style="width:100%"></div></div>
+      <div class="q-time-txt" id="wq-time-txt">30s remaining</div>
+    </div>
+    <div class="ans-box hidden" id="warmup-answer-box">
+      <div class="ans-label">✅ Answer</div>
+      <div class="ans-text" id="wq-answer"></div>
+    </div>
+    <button class="btn-primary" id="wq-show-btn" onclick="showWarmupAnswer()">Reveal Answer</button>
+    <button class="btn-purple hidden" id="wq-next-btn" onclick="nextWarmupQ()">Next Question →</button>
+  </div>
+
+  <!-- Step 3: Done -->
+  <div class="scroll-body pad hidden" id="warmup-done-area">
+    <div class="success-banner">
+      <div class="success-icon">🏆</div>
+      <div class="success-title">Brain Warmed Up!</div>
+      <div class="success-sub">You completed today's session</div>
+    </div>
+    <button class="btn-primary" onclick="go('main')">🏠 Main Menu</button>
+    <button class="btn-ghost" onclick="resetWarmupUI()">Try Again</button>
+  </div>
+</div>
+
+<!-- ═══════ STUDY SUGGESTION ═══════ -->
+<div class="screen" id="screen-study-suggestion">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goBack('study-suggestion')">‹</button>
+    <span class="top-bar-title">Study Suggestion</span>
+    <span class="top-bar-badge">PLAN</span>
+  </div>
+  <div class="scroll-body pad">
+    <div class="sec-label">Suggested Study Plan</div>
+    <div id="study-suggestions-list"></div>
+    <div class="sec-label" style="margin-top:6px;">Your Decision</div>
+    <div class="decision-grid">
+      <div class="decision-btn" onclick="studyDecision(true)">
+        <span class="decision-icon">📖</span>
+        <span class="decision-label">Yes, I'll study</span>
+        <span class="decision-sub">Start now</span>
+      </div>
+      <div class="decision-btn" onclick="studyDecision(false)">
+        <span class="decision-icon">🎮</span>
+        <span class="decision-label">Free time</span>
+        <span class="decision-sub">Suggest activities</span>
+      </div>
+    </div>
+    <div id="study-decision-result" class="hidden"></div>
+  </div>
+</div>
+
+<!-- ═══════ WELL-BEING MODE ═══════ -->
+<div class="screen" id="screen-wellbeing-mode">
+  <div class="top-bar">
+    <button class="back-btn" onclick="go('main')">‹</button>
+    <span class="top-bar-title">Well-Being</span>
+  </div>
+  <div class="scroll-body pad">
+    <div class="sec-label">Select Mode</div>
+    <div class="feat-item" onclick="go('time-tracker')">
+      <div class="feat-num">⏰</div>
+      <div class="feat-name">Time Tracker</div>
+      <div class="feat-arrow">›</div>
+    </div>
+    <div class="feat-item" onclick="go('weekly-review')">
+      <div class="feat-num">📊</div>
+      <div class="feat-name">Weekly Self-Review</div>
+      <div class="feat-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TIME TRACKER ═══════ -->
+<div class="screen" id="screen-time-tracker">
+  <div class="top-bar">
+    <button class="back-btn" onclick="go('wellbeing-mode')">‹</button>
+    <span class="top-bar-title">Time Tracker</span>
+    <span class="top-bar-badge">TASKS</span>
+  </div>
+  <div class="scroll-body pad" id="tracker-step1">
+    <div class="sec-label">Enter Your Tasks</div>
+    <input class="input-field" id="task-input-1" placeholder="Task 1 (e.g. BEM homework)" autocomplete="off">
+    <input class="input-field" id="task-input-2" placeholder="Task 2 (e.g. Read chapter 3)" autocomplete="off">
+    <input class="input-field" id="task-input-3" placeholder="Task 3 (e.g. Physics lab report)" autocomplete="off">
+    <input class="input-field" id="task-input-4" placeholder="Task 4 (optional)" autocomplete="off">
+    <button class="btn-primary" onclick="submitTasks()">Order by Urgency →</button>
+  </div>
+  <div class="scroll-body pad hidden" id="tracker-step2">
+    <div class="sec-label">Order by Urgency</div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-body">Tap ↑ ↓ to reorder — most urgent first (red dot).</div>
+    </div>
+    <div id="urgency-list"></div>
+    <button class="btn-primary" onclick="checkTaskUrgency()">Confirm Order →</button>
+  </div>
+  <div class="scroll-body pad hidden" id="tracker-step3">
+    <div class="sec-label">Are these tasks urgent?</div>
+    <div id="urgent-task-list" style="margin-bottom:16px;"></div>
+    <div class="decision-grid">
+      <div class="decision-btn" onclick="urgencyAnswer(true)">
+        <span class="decision-icon">🚨</span>
+        <span class="decision-label">Yes, urgent!</span>
+        <span class="decision-sub">Set schedule</span>
+      </div>
+      <div class="decision-btn" onclick="urgencyAnswer(false)">
+        <span class="decision-icon">😌</span>
+        <span class="decision-label">Not urgent</span>
+        <span class="decision-sub">Free time first</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-body pad hidden" id="tracker-step4">
+    <div id="tracker-result-area"></div>
+    <button class="btn-primary" onclick="go('main')">🏠 Main Menu</button>
+    <button class="btn-ghost" onclick="go('time-tracker')">Track More Tasks</button>
+  </div>
+</div>
+
+<!-- ═══════ WEEKLY REVIEW ═══════ -->
+<div class="screen" id="screen-weekly-review">
+  <div class="top-bar">
+    <button class="back-btn" onclick="go('wellbeing-mode')">‹</button>
+    <span class="top-bar-title">Weekly Self-Review</span>
+    <span class="top-bar-badge">REVIEW</span>
+  </div>
+  <div class="scroll-body pad" id="review-step1">
+    <div class="sec-label">What did you accomplish?</div>
+    <textarea class="textarea-field" id="review-accomplished" rows="4"
+      placeholder="e.g. Finished BEM assignment, read 2 chapters, exercised 3 times..."></textarea>
+    <div class="sec-label" style="margin-top:14px;">What did you avoid?</div>
+    <textarea class="textarea-field" id="review-avoided" rows="3"
+      placeholder="e.g. Didn't start Physics project, skipped reading..."></textarea>
+    <button class="btn-primary" style="margin-top:16px;" onclick="submitWeeklyReview()">Generate Analysis →</button>
+  </div>
+  <div class="scroll-body pad hidden" id="review-step2">
+    <div class="success-banner" style="margin-bottom:14px;">
+      <div class="success-icon">📊</div>
+      <div class="success-title">Week in Review</div>
+      <div class="success-sub" id="review-week-subtitle">Here's your summary</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📈 Daily Accomplishment Score</div>
+      <div id="review-chart" style="margin-top:14px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💡 Insights</div>
+      <div class="card-body" id="review-feedback-text"></div>
+    </div>
+    <button class="btn-primary" onclick="go('main')">🏠 Main Menu</button>
+    <button class="btn-ghost" onclick="go('weekly-review')">New Review</button>
+  </div>
+</div>
+
+</div><!-- /#app -->
+
+<script>
+// ════════════════════════════════════════
+//   STATE
+// ════════════════════════════════════════
+const S = {
+  subject: '', topic: '',
+  warmupDiff: 'easy', warmupQ: 0,
+  warmupTimer: null, warmupSecsLeft: 30, warmupTotalSecs: 30,
+  tasks: [], taskOrder: []
+};
+
+// ════════════════════════════════════════
+//   ✏️  EDITABLE DATA — ADD YOUR OWN CONTENT BELOW
+// ════════════════════════════════════════
+
+/**
+ * SUBJECTS & TOPICS
+ * Keys must match the onclick="selectSubject('...')" values in HTML above.
+ */
+const topicMap = {
+  'BEM': [
+    'Algebra', 'Geometry', 'Fractions', 'Calculus',
+    'Statistics', 'Trigonometry'
+    // ADD MORE BEM TOPICS HERE
+  ],
+  'Physics': [
+    'Kinematics', 'Dynamics', 'Energy & Work', 'Waves & Sound',
+    'Electricity', 'Magnetism', 'Optics', 'Thermodynamics'
+    // ADD MORE PHYSICS TOPICS HERE
+  ],
+  'Chemistry': [
+    'Atomic Structure', 'Periodic Table', 'Chemical Bonding',
+    'Acids & Bases', 'Stoichiometry', 'Organic Chemistry',
+    'Electrochemistry', 'Thermochemistry'
+    // ADD MORE CHEMISTRY TOPICS HERE
+  ],
+  'Comp Prog': [
+    'Variables & Data Types', 'Conditionals', 'Loops',
+    'Functions', 'Arrays', 'Object-Oriented Programming',
+    'Arduino Coding', 'Machine Learning'
+    // ADD MORE COMPUTER PROGRAMMING TOPICS HERE
+  ],
+  'PH History': [
+    'Pre-Colonial Philippines', 'Spanish Colonization', 'Philippine Revolution',
+    'American Period', 'Commonwealth Era', 'World War II in PH',
+    'Marcos Era & Martial Law', 'People Power Revolution'
+    // ADD MORE PHILIPPINE HISTORY TOPICS HERE
+  ],
+  'Vocabulary': [
+    'Synonyms & Antonyms', 'Context Clues', 'Word Roots & Affixes',
+    'Academic Vocabulary', 'Figurative Language', 'Homophones',
+    'Connotation & Denotation', 'Word Formation'
+    // ADD MORE VOCABULARY TOPICS HERE
+  ]
+};
+
+/**
+ * ELI5 EXPLANATIONS
+ * Key = topic name (must match a topic string in topicMap above)
+ */
+const explanations = {
+  // ── BEM ──
+  'Algebra':
+    "Algebra is like a puzzle where some numbers are hiding! We use letters like x or y to find the missing number. Example: x + 3 = 7 — so x must be 4! ⚡",
+  'Geometry':
+    "Geometry is the math of shapes! Squares, circles, triangles — we learn sizes, angles, and areas. Think of it as measuring the world around you! 📐",
+  'Fractions':
+    "Fractions are pieces of a whole! Cut a pizza into 4 slices, eat 1 = you ate 1/4 of the pizza. Bottom number = total pieces, top = how many you have! 🍕",
+  'Calculus':
+    "Calculus is the math of change! Differentiation finds how fast something changes (like speed), while integration finds the total (like distance traveled). It's the math behind physics, engineering, and AI! 🚗",
+  'Statistics':
+    "Statistics is the math of data! We collect numbers, find the average (mean), the middle value (median), and the most common (mode) to understand patterns in the world around us. 📊",
+  'Trigonometry':
+    "Trigonometry is the math of triangles and angles! Sin, cos, and tan are ratios that relate the angles and sides of right triangles. Used in engineering, navigation, and even game design! 🔺",
+
+  // ── PHYSICS ──
+  'Kinematics':
+    "Kinematics studies HOW things move — distance, speed, velocity, and acceleration — without asking WHY they move. Think of describing a car trip using only numbers and graphs! 🚗",
+  'Dynamics':
+    "Dynamics studies WHY things move! Newton's Laws explain it: objects stay still unless pushed, force = mass × acceleration, and every action has an equal opposite reaction. ⚡",
+  'Energy & Work':
+    "Work is done when a force moves an object. Energy is the ability to do work. Kinetic energy is the energy of motion; potential energy is stored energy. And energy is always conserved — it just changes form! 🔋",
+  'Waves & Sound':
+    "Waves carry energy from one place to another. Sound is a wave that travels through air by vibrating particles. Frequency = pitch (how high/low), amplitude = volume (how loud)! 🎵",
+  'Electricity':
+    "Electricity is the flow of electrons! Voltage pushes electrons, current is how many flow, and resistance fights the flow. V = IR (Ohm's Law) is the golden rule! ⚡",
+  'Magnetism':
+    "Magnetism is an invisible force between magnets and moving charges. Opposite poles attract, same poles repel. Electric current creates magnetic fields — that's how motors and speakers work! 🧲",
+  'Optics':
+    "Optics is the study of light! Light travels in straight lines, bounces off mirrors (reflection), and bends when it changes material (refraction). That's why a straw looks bent in water! 🔍",
+  'Thermodynamics':
+    "Thermodynamics studies heat and energy! Heat flows from hot to cold. The 1st law says energy is conserved; the 2nd law says disorder always increases. Everything tends toward chaos! 🔥",
+
+  // ── CHEMISTRY ──
+  'Atomic Structure':
+    "Atoms are the tiny building blocks of everything! Each atom has a nucleus (protons + neutrons) in the center, with electrons orbiting around it. Protons determine what element it is! ⚛️",
+  'Periodic Table':
+    "The Periodic Table organizes all 118 known elements by atomic number! Elements in the same column (group) have similar properties. Metals are on the left, non-metals on the right! 🧪",
+  'Chemical Bonding':
+    "Atoms bond to become stable! Ionic bonds transfer electrons (metal + non-metal), covalent bonds share electrons (non-metals), and metallic bonds let electrons roam freely in metals. 🔗",
+  'Acids & Bases':
+    "Acids donate protons (H+) and taste sour — like vinegar! Bases accept protons (OH-) and feel slippery — like soap! pH measures acidity: below 7 = acid, 7 = neutral, above 7 = base. 🧴",
+  'Stoichiometry':
+    "Stoichiometry is the math of chemical reactions! It tells us exactly how much of each chemical we need and how much product we'll get, using the balanced chemical equation as a recipe. ⚗️",
+  'Organic Chemistry':
+    "Organic chemistry studies carbon-based molecules! Carbon can form millions of different compounds because it can make 4 bonds. Life itself is built on organic chemistry — DNA, proteins, fats! 🌿",
+
+  // ── COMPUTER PROGRAMMING ──
+  'Variables & Data Types':
+    "A variable is like a labeled box that stores information! It can hold numbers (int, float), text (string), or true/false values (boolean). You give it a name, then store and retrieve data! 📦",
+  'Conditionals':
+    "Conditionals let programs make decisions! IF something is true, do this. ELSE, do that. It's like a traffic light — if red, stop; if green, go! 🚦",
+  'Loops':
+    "Loops repeat code automatically! A FOR loop runs a set number of times; a WHILE loop runs as long as a condition is true. Instead of writing the same line 100 times, just loop it! 🔄",
+  'Functions':
+    "A function is a reusable block of code! You define it once, then call it whenever needed. Functions take inputs (parameters) and return outputs. Like a machine: put something in, get something out! ⚙️",
+  'Arrays':
+    "An array is a list of values stored in one variable! Instead of 10 separate variables, use one array with 10 slots: scores[0], scores[1]… etc. Perfect for storing related data! 📋",
+  'Object-Oriented Programming':
+    "OOP organizes code into objects! A class is a blueprint (like 'Car'), and objects are instances of that blueprint (like your specific car). Objects have properties (color) and methods (drive()). 🚗",
+  'Arduino Coding':
+    "Arduino is a tiny computer you can program! It reads sensors (like temperature or light) and controls outputs (like LEDs or motors). You write code in C++: setup() runs once at start, loop() runs forever! 🤖",
+  'Machine Learning':
+    "Machine Learning teaches computers to learn from data instead of following fixed rules! You feed it thousands of examples, it finds patterns, and then it can make predictions on new data. Like teaching a dog tricks, but for computers! 🧠",
+
+  // ── PHILIPPINE HISTORY ──
+  'Pre-Colonial Philippines':
+    "Before the Spanish arrived, the Philippines had thriving communities called barangays! People traded with China, India, and Borneo, had their own writing (Baybayin), laws (Code of Kalantiao), and religions. 🌴",
+  'Spanish Colonization':
+    "Spain colonized the Philippines for 333 years starting 1565! They introduced Christianity, built churches, and changed Filipino culture deeply. The encomienda system forced Filipinos to pay tribute and labor. ⛪",
+  'Philippine Revolution':
+    "The Katipunan, founded by Andres Bonifacio in 1892, started the revolution against Spain! Emilio Aguinaldo later took leadership. The Cry of Pugad Lawin in 1896 began open revolt. 🗡️",
+  'American Period':
+    "After Spain lost the Spanish-American War, the Philippines was sold to the US for $20M in 1898. Americans introduced public education, English, and democracy — but Filipinos fought back in the Philippine-American War. 🦅",
+  'World War II in PH':
+    "Japan invaded the Philippines in 1941! The fall of Bataan and the Death March were tragic. Gen. MacArthur promised 'I shall return' — and he did in 1944. Manila was liberated in 1945. 🎖️",
+  'Marcos Era & Martial Law':
+    "Ferdinand Marcos declared Martial Law in 1972, suspending civil rights and ruling by decree for over a decade. This era saw massive infrastructure but also widespread human rights abuses and corruption. ⚖️",
+  'People Power Revolution':
+    "In 1986, millions of Filipinos peacefully gathered on EDSA to protest Marcos! This bloodless revolution ousted Marcos and restored democracy, with Corazon Aquino becoming President. It inspired the world! 🌸",
+
+  // ── VOCABULARY ──
+  'Synonyms & Antonyms':
+    "Synonyms are words with similar meanings — 'happy' and 'joyful'! Antonyms are opposites — 'hot' and 'cold'. Knowing synonyms helps you avoid repeating the same word and makes writing more interesting! 📝",
+  'Context Clues':
+    "Context clues are hints in the surrounding text that help you figure out an unknown word's meaning! Look at the words before and after, examples given, or contrast words like 'but' and 'however'. 🔍",
+  'Word Roots & Affixes':
+    "Word roots are the base meaning — 'bio' means life! Prefixes go before (un-, re-, pre-) and suffixes go after (-tion, -able, -ly). Knowing roots lets you decode thousands of unfamiliar words! 🌱",
+  'Figurative Language':
+    "Figurative language uses words creatively beyond their literal meaning! Simile compares using 'like/as', metaphor says something IS something else, personification gives objects human traits. Poetry is full of it! 🎭",
+
+  // DEFAULT (shown when no specific explanation exists)
+  'default':
+    "This concept is like a big puzzle — once you understand the basic pieces and how they fit, the whole picture becomes clear! Break it down step by step and you'll master it. ⚡"
+};
+
+/**
+ * BRAIN WARM-UP QUESTIONS
+ * Add more questions to any difficulty array below.
+ * Format: { q: "Question text?", a: "Answer explanation." }
+ */
+const warmupQuestions = {
+  easy: [
+    { q: "What is 15 + 28?",
+      a: "43! Add tens: 10+20=30, then ones: 5+8=13. Total = 43 ✅" },
+    { q: "How many sides does a hexagon have?",
+      a: "6 sides! Hexa- means six in Greek. 🔷" },
+    { q: "What is the capital of the Philippines?",
+      a: "Manila! Capital since Spanish colonial times. 🇵🇭" },
+    { q: "What does LED stand for?",
+      a: "Light Emitting Diode! LEDs are efficient light sources used in everything from TV screens to Arduino projects. 💡" },
+    { q: "What is H₂O?",
+      a: "Water! H₂O means 2 hydrogen atoms bonded to 1 oxygen atom. 💧" },
+    { q: "What year did the People Power Revolution happen?",
+      a: "1986! Millions gathered on EDSA and peacefully ousted Ferdinand Marcos. 🌸" },
+    // ADD MORE EASY QUESTIONS HERE:
+    // { q: "Your question?", a: "Your answer!" },
+  ],
+  average: [
+    { q: "A train travels 60 km/h for 2.5 hours. How far does it travel?",
+      a: "150 km! Distance = Speed × Time → 60 × 2.5 = 150 km 🚂" },
+    { q: "What is the square root of 144?",
+      a: "12! Because 12 × 12 = 144. 🧮" },
+    { q: "What gas do plants absorb during photosynthesis?",
+      a: "Carbon dioxide (CO₂)! Plants convert it + water + sunlight into oxygen and glucose. 🌿" },
+    { q: "In Arduino, what function runs repeatedly in a loop?",
+      a: "The loop() function! It runs over and over after setup() finishes. This is where you put your main program logic. 🤖" },
+    { q: "What is pH 7 considered?",
+      a: "Neutral! Below 7 is acidic (like vinegar), above 7 is basic (like soap). Pure water is pH 7. 🧪" },
+    { q: "Who founded the Katipunan in 1892?",
+      a: "Andres Bonifacio! He was the 'Father of the Philippine Revolution' and a great plebeian hero. 🗡️" },
+    // ADD MORE AVERAGE QUESTIONS HERE:
+    // { q: "Your question?", a: "Your answer!" },
+  ],
+  hard: [
+    { q: "Solve: 3x² − 12 = 0. Find x.",
+      a: "x = ±2! Steps: 3x²=12 → x²=4 → x=√4 → x = +2 or −2 ✔️" },
+    { q: "What is the mitochondria's primary function?",
+      a: "Produces ATP (energy) through cellular respiration. The powerhouse of the cell! 🔋" },
+    { q: "What is the derivative of f(x) = 3x³ + 2x²?",
+      a: "f'(x) = 9x² + 4x! Power rule: multiply by exponent, then reduce exponent by 1. 📊" },
+    { q: "In Machine Learning, what is 'overfitting'?",
+      a: "When a model learns the training data TOO well — including its noise — and performs poorly on new data. It memorized instead of learning patterns! 🧠" },
+    { q: "What is Newton's Second Law of Motion?",
+      a: "F = ma! Force equals mass times acceleration. A heavier object needs more force to accelerate at the same rate. ⚡" },
+    { q: "What is Avogadro's Number?",
+      a: "6.022 × 10²³! It's the number of atoms/molecules in one mole of a substance. Used in stoichiometry calculations. ⚗️" },
+    // ADD MORE HARD QUESTIONS HERE:
+    // { q: "Your question?", a: "Your answer!" },
+  ]
+};
+
+/**
+ * STUDY SUGGESTIONS
+ * Shown on the Study Suggestion screen.
+ */
+const studySuggestions = [
+  { topic: "Review Yesterday's Notes",    duration: "20 min", icon: "📋" },
+  { topic: "Practice Problems",           duration: "30 min", icon: "✏️" },
+  { topic: "Watch an Explainer Video",    duration: "15 min", icon: "🎬" },
+  { topic: "Teach it to Yourself Aloud",  duration: "10 min", icon: "🗣️" },
+  // ADD MORE SUGGESTIONS:
+  // { topic: "...", duration: "... min", icon: "..." },
+];
+
+/**
+ * FREE TIME ACTIVITIES
+ * Shown when user picks "Free time" or "Not urgent".
+ */
+const freeActivities = [
+  { title: "Take a Walk",       desc: "15 minutes boosts focus and mood ✨" },
+  { title: "Listen to Music",   desc: "Relaxing tunes recharge your brain 🎵" },
+  { title: "Sketch or Doodle",  desc: "Creative breaks improve memory retention 🎨" },
+  { title: "Read for Fun",      desc: "Any book you enjoy — no pressure! 📖" },
+  { title: "Stretch Exercises", desc: "5 minutes of stretching refreshes your body 🧘" },
+  // ADD MORE:
+  // { title: "...", desc: "..." },
+];
+
+// ════════════════════════════════════════
+//   NAVIGATION
+// ════════════════════════════════════════
+let currentScreen = 'splash';
+
+function go(id) {
+  const prev = document.getElementById('screen-' + currentScreen);
+  const next = document.getElementById('screen-' + id);
+  if (!next || id === currentScreen) return;
+
+  prev.classList.add('exit');
+  setTimeout(() => { prev.classList.remove('active', 'exit'); }, 270);
+
+  next.classList.add('active');
+  const sb = next.querySelector('.scroll-body');
+  if (sb) sb.scrollTop = 0;
+  currentScreen = id;
+
+  // Screen init hooks
+  if (id === 'explain')          loadExplain();
+  if (id === 'study-suggestion') loadStudySuggestions();
+  if (id === 'brain-warmup')     resetWarmupUI();
+  if (id === 'time-tracker')     resetTrackerUI();
+  if (id === 'weekly-review')    resetReviewUI();
+}
+
+function goBack(from) {
+  const map = { 'explain': 'academic-mode', 'brain-warmup': 'academic-mode', 'study-suggestion': 'academic-mode' };
+  go(map[from] || 'main');
+}
+
+// ════════════════════════════════════════
+//   ACADEMIC — SUBJECT / TOPIC
+// ════════════════════════════════════════
+function selectSubject(sub) {
+  S.subject = sub;
+  document.getElementById('topic-bar-title').textContent = sub + ' Topics';
+  const el = document.getElementById('topic-pills');
+  el.innerHTML = '';
+  (topicMap[sub] || []).forEach(t => {
+    const p = document.createElement('span');
+    p.className = 't-pill';
+    p.textContent = t;
+    p.onclick = () => {
+      S.topic = t;
+      el.querySelectorAll('.t-pill').forEach(x => x.classList.remove('selected'));
+      p.classList.add('selected');
+      document.getElementById('topic-next-btn').classList.remove('hidden');
+    };
+    el.appendChild(p);
+  });
+  document.getElementById('topic-next-btn').classList.add('hidden');
+  go('academic-topic');
+}
+
+// ════════════════════════════════════════
+//   ELI5
+// ════════════════════════════════════════
+function loadExplain() {
+  const topic = S.topic || 'your topic';
+  document.getElementById('explain-topic').textContent = topic;
+  const r = document.getElementById('explain-result');
+  r.innerHTML = '<div style="text-align:center;padding:28px 0;"><div style="font-size:44px;margin-bottom:10px;">⚡</div><div style="font-size:14px;color:var(--gray-400);">Loading...</div></div>';
+  setTimeout(() => {
+    const txt = explanations[topic] || explanations['default'];
+    r.innerHTML = `<div class="card-title">🌟 ${topic}</div><div class="card-body" style="margin-top:8px;">${txt}</div>`;
+  }, 500);
+}
+
+// ════════════════════════════════════════
+//   BRAIN WARM-UP  ← TIMER BUG FIXED HERE
+// ════════════════════════════════════════
+function resetWarmupUI() {
+  clearInterval(S.warmupTimer);   // ← stops any running timer
+  S.warmupTimer = null;
+  show('warmup-select-area');
+  hide('warmup-question-area');
+  hide('warmup-done-area');
+}
+
+function startWarmup(diff) {
+  S.warmupDiff = diff;
+  S.warmupQ = 0;
+  hide('warmup-select-area');
+  show('warmup-question-area');
+  hide('warmup-done-area');
+  renderWarmupQ();
+}
+
+function renderWarmupQ() {
+  const qs = warmupQuestions[S.warmupDiff];
+  if (S.warmupQ >= qs.length) {
+    hide('warmup-question-area');
+    show('warmup-done-area');
+    return;
+  }
+
+  // ── Set timer duration by difficulty ──
+  const secs = S.warmupDiff === 'easy' ? 30
+             : S.warmupDiff === 'average' ? 45
+             : 90;               // hard = 90
+
+  S.warmupTotalSecs = secs;
+  S.warmupSecsLeft  = secs;
+
+  document.getElementById('wq-label').textContent    = `QUESTION ${S.warmupQ + 1} / ${qs.length}`;
+  document.getElementById('wq-text').textContent     = qs[S.warmupQ].q;
+  document.getElementById('wq-timer').style.width    = '100%';  // reset bar
+  document.getElementById('wq-time-txt').textContent = secs + 's remaining';
+
+  hide('warmup-answer-box');
+  show('wq-show-btn');
+  hide('wq-next-btn');
+
+  // ── Clear any previous timer before starting a new one ──
+  clearInterval(S.warmupTimer);
+  S.warmupTimer = setInterval(() => {
+    S.warmupSecsLeft--;
+    const pct = Math.max(0, (S.warmupSecsLeft / S.warmupTotalSecs) * 100); // ← Math.max, NOT BEM.max
+    document.getElementById('wq-timer').style.width    = pct + '%';
+    document.getElementById('wq-time-txt').textContent = S.warmupSecsLeft + 's remaining';
+    if (S.warmupSecsLeft <= 0) {
+      clearInterval(S.warmupTimer);
+      S.warmupTimer = null;
+      showWarmupAnswer();   // auto-reveal when time runs out
+    }
+  }, 1000);
+}
+
+function showWarmupAnswer() {
+  clearInterval(S.warmupTimer);
+  S.warmupTimer = null;
+  document.getElementById('wq-answer').textContent = warmupQuestions[S.warmupDiff][S.warmupQ].a;
+  show('warmup-answer-box');
+  hide('wq-show-btn');
+  show('wq-next-btn');
+}
+
+function nextWarmupQ() {
+  S.warmupQ++;
+  renderWarmupQ();
+}
+
+// ════════════════════════════════════════
+//   STUDY SUGGESTION
+// ════════════════════════════════════════
+function loadStudySuggestions() {
+  const topic = S.topic || 'Your Subject';
+  const el = document.getElementById('study-suggestions-list');
+  el.innerHTML = '';
+  studySuggestions.forEach(s => {
+    el.innerHTML += `<div class="activity-card"><div class="activity-title">${s.icon} ${s.topic} — ${topic}</div><div class="activity-desc">Duration: <strong>${s.duration}</strong></div></div>`;
+  });
+  hide('study-decision-result');
+  document.querySelectorAll('#screen-study-suggestion .decision-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function studyDecision(willStudy) {
+  const r = document.getElementById('study-decision-result');
+  r.classList.remove('hidden');
+  if (willStudy) {
+    r.innerHTML = `<div class="card"><div class="card-title">📅 Study Timer Set!</div><div class="card-body">Use the Pomodoro method: <strong>25 min study → 5 min break</strong>. Start with the first suggestion. You've got this! ⚡</div></div><button class="btn-primary" onclick="go('main')">🏠 Main Menu</button>`;
+  } else {
+    let html = '<div class="sec-label">Free Time Activities</div>';
+    freeActivities.forEach(a => {
+      html += `<div class="activity-card"><div class="activity-title">${a.title}</div><div class="activity-desc">${a.desc}</div></div>`;
+    });
+    html += `<button class="btn-primary" style="margin-top:8px;" onclick="go('main')">🏠 Main Menu</button>`;
+    r.innerHTML = html;
+  }
+  setTimeout(() => r.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
+
+// ════════════════════════════════════════
+//   TIME TRACKER
+// ════════════════════════════════════════
+function resetTrackerUI() {
+  ['tracker-step1','tracker-step2','tracker-step3','tracker-step4'].forEach((id, i) => {
+    i === 0 ? show(id) : hide(id);
+  });
+  for (let i = 1; i <= 4; i++) document.getElementById('task-input-' + i).value = '';
+}
+
+function submitTasks() {
+  S.tasks = [1,2,3,4].map(i => document.getElementById('task-input-' + i).value.trim()).filter(Boolean);
+  if (!S.tasks.length) { alert('Please enter at least one task!'); return; }
+  S.taskOrder = [...S.tasks];
+  hide('tracker-step1');
+  show('tracker-step2');
+  renderUrgencyList();
+}
+
+function renderUrgencyList() {
+  const el = document.getElementById('urgency-list');
+  el.innerHTML = '';
+  S.taskOrder.forEach((task, i) => {
+    const dotCls = i === 0 ? 'dot-high' : i === 1 ? 'dot-med' : 'dot-low';
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML = `
+      <div class="task-dot ${dotCls}"></div>
+      <div class="task-name">${task}</div>
+      <div class="move-btns">
+        ${i > 0                        ? `<button class="move-btn" onclick="moveTask(${i},-1)">↑</button>` : ''}
+        ${i < S.taskOrder.length - 1   ? `<button class="move-btn" onclick="moveTask(${i},1)">↓</button>`  : ''}
+      </div>`;
+    el.appendChild(row);
+  });
+}
+
+function moveTask(idx, dir) {
+  const ni = idx + dir;
+  if (ni < 0 || ni >= S.taskOrder.length) return;
+  [S.taskOrder[idx], S.taskOrder[ni]] = [S.taskOrder[ni], S.taskOrder[idx]];
+  renderUrgencyList();
+}
+
+function checkTaskUrgency() {
+  hide('tracker-step2');
+  show('tracker-step3');
+  const el = document.getElementById('urgent-task-list');
+  el.innerHTML = '';
+  S.taskOrder.forEach((task, i) => {
+    const dotCls = i === 0 ? 'dot-high' : i === 1 ? 'dot-med' : 'dot-low';
+    const label  = i === 0 ? 'Most urgent' : i === 1 ? 'Moderate' : 'Low urgency';
+    el.innerHTML += `<div class="task-row"><div class="task-dot ${dotCls}"></div><div class="task-name">${task}</div><div class="task-meta">${label}</div></div>`;
+  });
+}
+
+function urgencyAnswer(isUrgent) {
+  hide('tracker-step3');
+  show('tracker-step4');
+  const r = document.getElementById('tracker-result-area');
+  const times = [45, 30, 20, 15];
+  if (isUrgent) {
+    let html = '<div class="sec-label">Your Schedule + Deadlines</div>';
+    S.taskOrder.forEach((task, i) => {
+      const dotCls = i === 0 ? 'dot-high' : i === 1 ? 'dot-med' : 'dot-low';
+      html += `<div class="task-row"><div class="task-dot ${dotCls}"></div><div class="task-name">${task}</div><div class="task-meta">~${times[i]||20} min</div></div>`;
+    });
+    html += `<div class="card" style="margin-top:12px;"><div class="card-title">🗓️ Deadlines Set</div><div class="card-body">Tackle the most urgent task first. Take 5-minute breaks in between. You've got this! ⚡</div></div>`;
+    r.innerHTML = html;
+  } else {
+    let html = '<div class="sec-label">Free Time First!</div>';
+    freeActivities.slice(0, 3).forEach(a => {
+      html += `<div class="activity-card"><div class="activity-title">${a.title}</div><div class="activity-desc">${a.desc}</div></div>`;
+    });
+    html += `<div class="card" style="margin-top:4px;"><div class="card-title">💡 Tip</div><div class="card-body">Since tasks aren't urgent, recharge first. You'll focus much better afterwards! 🌱</div></div>`;
+    r.innerHTML = html;
+  }
+}
+
+// ════════════════════════════════════════
+//   WEEKLY REVIEW  ← Math.* BUG FIXED HERE
+// ════════════════════════════════════════
+function resetReviewUI() {
+  show('review-step1');
+  hide('review-step2');
+  document.getElementById('review-accomplished').value = '';
+  document.getElementById('review-avoided').value = '';
+}
+
+function submitWeeklyReview() {
+  const acc = document.getElementById('review-accomplished').value.trim();
+  const avo = document.getElementById('review-avoided').value.trim();
+  if (!acc) { alert('Please enter what you accomplished this week!'); return; }
+  hide('review-step1');
+  show('review-step2');
+
+  const accN = acc.split(',').filter(Boolean).length;
+  const avoN = avo ? avo.split(',').filter(Boolean).length : 0;
+  const base = Math.min(10, accN * 2);                   // ← Math.min (was BEM.min)
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const vals = days.map(() =>
+    Math.max(1, Math.min(10, Math.floor(Math.random() * 4) + base - 1)) // ← all Math.* (was BEM.*)
+  );
+
+  document.getElementById('review-chart').innerHTML = days.map((d, i) =>
+    `<div class="chart-row"><span class="chart-label">${d}</span><div class="chart-track"><div class="chart-fill" style="width:${vals[i]*10}%"></div></div><span class="chart-val">${vals[i]}/10</span></div>`
+  ).join('');
+
+  document.getElementById('review-week-subtitle').textContent =
+    `${accN} accomplishment${accN !== 1 ? 's' : ''} this week`;
+
+  document.getElementById('review-feedback-text').textContent = accN >= 4
+    ? `Excellent week! You completed ${accN} things. ${avoN > 0 ? `Aim to avoid procrastination — ${avoN} task(s) skipped. ` : ''}Keep this momentum! ⚡`
+    : `Good effort with ${accN} accomplishment(s). ${avoN > 0 ? `Try to tackle ${avoN} avoided task(s) next week. ` : ''}Every step forward counts! 💪`;
+}
+
+// ════════════════════════════════════════
+//   HELPERS
+// ════════════════════════════════════════
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+</script>
+</body>
+</html>
